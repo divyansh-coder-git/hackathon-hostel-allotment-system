@@ -17,15 +17,18 @@
   interface Allocation {
     id: number;
     participantName: string;
-    gender: "Male" | "Female" | string;
+    gender: string;
     allottedHostel: string;
     allottedRoom: string;
   }
 
   let rooms = $state<Room[]>([]);
   let participants = $state<Participant[]>([]);
+  let allocations: Allocation[] = $state([]);
 
   let total_capacity = $state(0);
+  let allocated = $state(false);
+  let unallocated_participants = $state(0);
 
   async function handleHostelFile(event: Event) {
     let input = event.target as HTMLInputElement;
@@ -39,6 +42,28 @@
 
     const rows = XLSX.utils.sheet_to_json(sheet);
 
+    if (!rows) return;
+
+    const requiredHeaders = [
+      "Hostel Name",
+      "Room Number",
+      "Capacity",
+      "Hostel Type",
+    ];
+
+    const headers = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+    })[0] as string[];
+
+    const valid =
+      headers.length === requiredHeaders.length &&
+      headers.every((header, index) => header === requiredHeaders[index]);
+
+    if (!valid) {
+      alert("Invalid Hostel Excel format");
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rooms = rows.map((row: any) => {
       total_capacity += row["Capacity"];
@@ -51,6 +76,8 @@
     });
 
     console.log(rooms);
+    allocated = false;
+    allocations = [];
   }
 
   async function handleParticipantFile(event: Event) {
@@ -65,6 +92,23 @@
 
     const rows = XLSX.utils.sheet_to_json(sheet);
 
+    if (!rows) return;
+
+    const requiredHeaders = ["Participant Name", "Gender"];
+
+    const headers = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+    })[0] as string[];
+
+    const valid =
+      headers.length === requiredHeaders.length &&
+      headers.every((header, index) => header === requiredHeaders[index]);
+
+    if (!valid) {
+      alert("Invalid Participant Excel format");
+      return;
+    }
+
     console.log(rows);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,31 +120,42 @@
         gender: row["Gender"],
       };
     });
+
+    allocated = false;
+    allocations = [];
   }
 
-  let allocations: Allocation[] = $state([]);
+  const roomsCopy = $derived(rooms);
 
-  function allocateRooms(
-    participants: Participant[],
-    rooms: Room[],
-  ): Allocation[] {
+  function allocateRooms(participants: Participant[], roomsCopy: Room[]) {
     console.log("Function executed");
 
-    let i = 0;
+    if (roomsCopy.length === 0) {
+      alert("Upload a valid hostel file.");
+      return;
+    } else if (participants.length === 0) {
+      alert("Upload a valid participant file.");
+      return;
+    }
 
+    let i = 0;
     for (const participant of participants) {
       i++;
       let room;
       let requiredHostel = participant.gender === "Male" ? "Boys" : "Girls";
-      room = rooms.find((room) => {
+      room = roomsCopy.find((room) => {
         return room.hostelType == requiredHostel && room.capacity > 0;
       });
 
       if (!room) {
-        if (!room) {
-          console.log(`No room available for ${participant.name}`);
-          continue;
-        }
+        unallocated_participants++;
+        allocations.push({
+          id: i,
+          participantName: participant.name,
+          gender: participant.gender,
+          allottedHostel: "Not Alloted",
+          allottedRoom: "-",
+        });
       } else {
         allocations.push({
           id: i,
@@ -114,6 +169,12 @@
       }
     }
     console.log(allocations);
+    if (unallocated_participants != 0) {
+      alert(
+        `${unallocated_participants} participants were not allocated rooms`,
+      );
+    }
+    allocated = true;
     return allocations;
   }
 </script>
@@ -122,12 +183,15 @@
   <div>
     <input onchange={handleHostelFile} type="file" />
     <input onchange={handleParticipantFile} type="file" />
-    <button onclick={() => allocateRooms(participants, rooms)}
-      >Allocate Roms</button
+    <button
+      disabled={allocated}
+      onclick={() => {
+        allocateRooms(participants, roomsCopy);
+      }}>Allocate Roms</button
     >
   </div>
 
-  {#each rooms as room (room.roomNumber)}
+  {#each roomsCopy as room (room.roomNumber)}
     <div class="flex gap-3 list-none">
       <li>{room.hostelName}</li>
       <li>{room.roomNumber}</li>
@@ -145,7 +209,7 @@
     </div>
   {/each}
 
-  <br><br>
+  <br /><br />
 
   {#each allocations as allocation (allocation.id)}
     <div class="flex gap-3 list-none">
