@@ -28,6 +28,7 @@
 
   let total_capacity = $state(0);
   let allocated = $state(false);
+  let participant_no = $state(0);
   let unallocated_participants = $state(0);
 
   async function handleHostelFile(event: Event) {
@@ -42,7 +43,12 @@
 
     const rows = XLSX.utils.sheet_to_json(sheet);
 
-    if (!rows) return;
+    if (!rows) {
+      return;
+    } else if (rows.length === 0) {
+      alert("Hostel file is empty");
+      return;
+    }
 
     const requiredHeaders = [
       "Hostel Name",
@@ -92,7 +98,12 @@
 
     const rows = XLSX.utils.sheet_to_json(sheet);
 
-    if (!rows) return;
+    if (!rows) {
+      return;
+    } else if (rows.length === 0) {
+      alert("Participant file is empty");
+      return;
+    }
 
     const requiredHeaders = ["Participant Name", "Gender"];
 
@@ -120,6 +131,8 @@
         gender: row["Gender"],
       };
     });
+
+    participant_no = participants.length;
 
     allocated = false;
     allocations = [];
@@ -177,45 +190,155 @@
     allocated = true;
     return allocations;
   }
+
 </script>
 
-<div>
-  <div>
-    <input onchange={handleHostelFile} type="file" />
-    <input onchange={handleParticipantFile} type="file" />
+<div class="main-div flex flex-col w-full px-10">
+  <div class="navbar h-20"></div>
+
+  <div class="stats grid grid-cols-4 gap-4">
+    <div class="grid-card border border-black rounded px-4 py-2 text-center">
+      Capacity: {total_capacity}
+    </div>
+    <div class="grid-card border border-black rounded px-4 py-2 text-center">
+      Participants: {participant_no}
+    </div>
+    <div class="grid-card border border-black rounded px-4 py-2 text-center">
+      Alloted:
+    </div>
+    <div class="grid-card border border-black rounded px-4 py-2 text-center">
+      Remaining Capacity:
+    </div>
+  </div>
+
+  <div class="upload-section flex flex-col gap-5 justify-center w-full">
+    <div class="upload-div flex gap-5">
+      <div id="hostel_upload"
+        class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
+      >
+        <label
+          for="hostel_input"
+          class="text-xl font-semibold text-blue-700 italic"
+          >Upload Hostel File</label
+        >
+        <i class="fa-solid fa-file"></i>
+        <label
+          for="hostel_input"
+          class="text-xl font-semibold text-blue-700 italic"
+          >Drag or Click</label
+        >
+        <input
+          class="hidden"
+          id="hostel_input"
+          onchange={handleHostelFile}
+          type="file"
+        />
+      </div>
+
+      <div id="participant_upload"
+        class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
+      >
+        <label
+          for="participant_input"
+          class="text-xl font-semibold text-blue-700 italic"
+          >Upload Participant File</label
+        >
+
+        <i class="fa-solid fa-user"></i>
+        <label
+          for="hostel_input"
+          class="text-xl font-semibold text-blue-700 italic"
+          >Drag or Click</label
+        >
+        <input
+          class="hidden"
+          id="participant_input"
+          onchange={handleParticipantFile}
+          type="file"
+        />
+      </div>
+    </div>
+
     <button
       disabled={allocated}
-      onclick={() => {
-        allocateRooms(participants, roomsCopy);
-      }}>Allocate Roms</button
+      onclick={() => allocateRooms(participants, roomsCopy)}
+      >Allocate Rooms</button
     >
   </div>
 
-  {#each roomsCopy as room (room.roomNumber)}
-    <div class="flex gap-3 list-none">
-      <li>{room.hostelName}</li>
-      <li>{room.roomNumber}</li>
-      <li>{room.capacity}</li>
-      <li>{room.hostelType}</li>
+  <div class="uploaded-data flex gap-5 px-5 py-5">
+    <div class="w-1/3">
+      <table>
+        <thead>
+          <tr>
+            <th>Hostel Name</th>
+            <th>Room Number</th>
+            <th>Capacity</th>
+            <th>Hostel Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each roomsCopy as room (room.roomNumber)}
+            <tr>
+              <td>{room.hostelName}</td>
+              <td>{room.roomNumber}</td>
+              <td>{room.capacity}</td>
+              <td>{room.hostelType}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     </div>
-  {/each}
-  <span>Total Capacity Left: {total_capacity}</span>
-  <br /><br />
 
-  {#each participants as participant (participant.id)}
-    <div class="flex gap-3 list-none">
-      <li>{participant.name}</li>
-      <li>{participant.gender}</li>
+    <div class="w-1/3">
+      <table>
+        <thead>
+          <tr>
+            <th>Participant Name</th>
+            <th>Gender</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each participants as participant (participant.id)}
+            <tr>
+              <td>{participant.name}</td>
+              <td>{participant.gender}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     </div>
-  {/each}
 
-  <br /><br />
-
-  {#each allocations as allocation (allocation.id)}
-    <div class="flex gap-3 list-none">
-      <li>{allocation.participantName}</li>
-      <li>{allocation.allottedHostel}</li>
-      <li>{allocation.allottedRoom}</li>
+    <div class="w-1/3">
+      <table>
+        <thead>
+          <tr>
+            <th>Participant Name</th>
+            <th>Gender</th>
+            <th>Alloted Hostel</th>
+            <th>Alloted Room</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each allocations as allocation (allocation.id)}
+            <tr>
+              <td>{allocation.participantName}</td>
+              <td>{allocation.gender}</td>
+              <td>{allocation.allottedHostel}</td>
+              <td>{allocation.allottedRoom}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     </div>
-  {/each}
+      
+  </div>
 </div>
+
+<style>
+  i{
+    margin: auto;
+    padding: 1rem 0;
+    font-size: 1.5rem;
+  }
+</style>
