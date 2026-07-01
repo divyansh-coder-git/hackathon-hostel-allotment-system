@@ -51,7 +51,7 @@
   let allocations: Allocation[] = $state([]);
 
   let total_capacity = $state(0);
-  let allocated = $state(false);
+  let allocated = $state(true);
   let participant_no = $state(0);
   let unallocated_participants = $state(0);
 
@@ -271,7 +271,7 @@
       <div class="card-info">
         <span class="text-sm">Participants</span>
         <span class="text-2xl text-[#E2E8F0] font-bold"
-          >{total_capacity ? total_capacity : "-"}</span
+          >{participant_no ? participant_no : "-"}</span
         >
         <span class="text-xs">Total Registered</span>
       </div>
@@ -310,56 +310,6 @@
     </div>
   </div>
 
-  <!-- <div class="upload-section flex flex-col gap-5 justify-center w-full">
-    <div class="upload-div flex gap-5">
-      <div
-        id="hostel_upload"
-        class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
-      >
-        <label
-          for="hostel_input"
-          class="text-xl font-semibold text-blue-700 italic"
-          >Upload Hostel File</label
-        >
-        <i class="fa-solid fa-file"></i>
-        <label
-          for="hostel_input"
-          class="text-xl font-semibold text-blue-700 italic"
-          >Drag or Click</label
-        >
-        <input
-          class="hidden"
-          id="hostel_input"
-          onchange={handleHostelFile}
-          type="file"
-        />
-      </div>
-
-      <div
-        id="participant_upload"
-        class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
-      >
-        <label
-          for="participant_input"
-          class="text-xl font-semibold text-blue-700 italic"
-          >Upload Participant File</label
-        >
-
-        <i class="fa-solid fa-user"></i>
-        <label
-          for="hostel_input"
-          class="text-xl font-semibold text-blue-700 italic"
-          >Drag or Click</label
-        >
-        <input
-          class="hidden"
-          id="participant_input"
-          onchange={handleParticipantFile}
-          type="file"
-        />
-      </div>
-    </div> -->
-
   <div class="upload-section mt-3 grid grid-cols-3 gap-3">
     <div class="upload-grid-card">
       <div class="flex items-center gap-2">
@@ -373,8 +323,9 @@
           >
         </div>
       </div>
+
       <div
-        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded"
+        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded-lg transform duration-300 hover:scale-102 hover:bg-[#1b4286]"
       >
         <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
         <span class="text-[#F8FAFC] text-sm"
@@ -382,7 +333,7 @@
         >
         <span class="text-[#F8FAFC] text-sm">or</span>
         <button
-          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm"
+          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
           >Browse Files</button
         >
         <span class="text-[#64748B] align-bottom text-sm"
@@ -400,13 +351,12 @@
         />
         <div class="text-[#E2E8F0] flex flex-col align-baseline">
           <span class="text-base font-semibold">Participant Excel File</span>
-          <span class="text-xs"
-            >Upload file containing participant details</span
+          <span class="text-xs">Upload file containing participant details</span
           >
         </div>
       </div>
       <div
-        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded"
+        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded-lg transform duration-300 hover:scale-102 hover:bg-[#1b4286]"
       >
         <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
         <span class="text-[#F8FAFC] text-sm"
@@ -414,7 +364,7 @@
         >
         <span class="text-[#F8FAFC] text-sm">or</span>
         <button
-          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm"
+          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
           >Browse Files</button
         >
         <span class="text-[#64748B] align-bottom text-sm"
@@ -425,22 +375,32 @@
       <div class="upload-btn"></div>
     </div>
 
-    <div class="flex flex-col gap-10 text-center justify-center items-center bg-[#112240] border border-[#233554]">
-       <div>
-        <p>Ready to Allocate?</p>
-        <p>Upload both Excel files to enable room allocation</p>
-       </div>
-       <div>
-        <button class="px-10 py-1 flex gap-3 justify-center items-center border border-green-400 bg-green-600 rounded" onclick={()=>allocateRooms(participants, roomsCopy)} disabled>
-          <Users class="w-5 h-5"/>
+    <div
+      class="flex flex-col gap-10 text-center justify-center items-center rounded-lg bg-[#112240] border border-[#233554] transform duration-300 hover:scale-102 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+    >
+      <div>
+        <p class="text-[#F8FAFC] text-base font-semibold">Ready to Allocate?</p>
+        <p class="text-[#bfc2c6] text-sm">
+          Upload both Excel files to enable room allocation
+        </p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button
+          class="grow py-2 flex gap-3 justify-center items-center border font-semibold cursor-pointer text-white border-blue-600 bg-blue-500 hover:bg-blue-600 rounded disabled:bg-gray-400/70 disabled:text-gray-800 disabled:border disabled:border-gray-500 disabled:cursor-not-allowed"
+          onclick={() => allocateRooms(participants, roomsCopy)}
+          disabled={allocated}
+        >
+          <Users class="w-5 h-5" />
           Allocate Rooms
         </button>
-       </div>
+        <p class="text-sm text-[#64748B]">
+          Please upload both hostel and participant files first
+        </p>
+      </div>
     </div>
-
   </div>
 
-  <div class="uploaded-data flex gap-5 px-5 py-5">
+  <!-- <div class="uploaded-data flex gap-5 px-5 py-5">
     <div class="w-1/3">
       <table>
         <thead>
@@ -505,12 +465,15 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </div> -->
+
+  <div></div>
 </div>
 
 <style>
-  /* flex gap-3 px-2 py-3 border border-[#233554] bg-[#112240] rounded text-center */
-
+  :global(body) {
+    background-color: #0a192f;
+  }
   .grid-card {
     display: flex;
     align-items: center;
@@ -525,8 +488,6 @@
     display: flex;
     align-items: center;
   }
-
-  /* flex flex-col text-[#d5dadf] align-baseline text-left */
 
   .card-info {
     display: flex;
@@ -547,8 +508,9 @@
     border-radius: 0.5rem;
     transition: 0.3s ease-in-out;
   }
+
   .upload-grid-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 </style>
