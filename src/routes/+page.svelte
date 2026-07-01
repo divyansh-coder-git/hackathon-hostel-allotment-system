@@ -1,5 +1,29 @@
 <script lang="ts">
   import * as XLSX from "xlsx";
+  import Building2 from "@lucide/svelte/icons/building-2";
+  import Moon from "@lucide/svelte/icons/moon";
+  import Bed from "@lucide/svelte/icons/bed";
+  import Users from "@lucide/svelte/icons/users-round";
+  import Checkcircle from "@lucide/svelte/icons/circle-check-big";
+  import BedDouble from "@lucide/svelte/icons/bed-double";
+  import Cloudupload from "@lucide/svelte/icons/cloud-upload";
+  import FileSpreadsheet from "@lucide/svelte/icons/file-spreadsheet";
+  import FileUser from "@lucide/svelte/icons/file-user";
+  //   import {
+
+  //Cloudupload
+  //     Users,
+  //     Bed,
+  //     Download,
+  //     Upload,
+  //     FileSpreadsheet,
+  //     CheckCircle,
+  //     Moon,
+  //     UserCheck,
+  //     Calendar,
+  //     Mars,
+  //     Venus
+  // } from "lucide-svelte";
 
   interface Room {
     hostelName: string;
@@ -190,30 +214,106 @@
     allocated = true;
     return allocations;
   }
-
 </script>
 
-<div class="main-div flex flex-col w-full px-10">
-  <div class="navbar h-20"></div>
+<!-- Navbar -->
+<div class="navbar px-5 py-1 bg-[#0B1220] flex justify-between items-center">
+  <div class="w-fit flex items-center gap-3">
+    <Building2 class="w-7 h-7 text-sky-400" />
+    <span class="text-xl text-[#F8FAFC] font-semibold"
+      >Hostel Allocation System</span
+    >
+  </div>
 
-  <div class="stats grid grid-cols-4 gap-4">
-    <div class="grid-card border border-black rounded px-4 py-2 text-center">
-      Capacity: {total_capacity}
+  <div>
+    <button class="border border-[#233554] px-2 py-1 rounded">
+      <Moon class="w-4 h-4 text-sky-400" />
+    </button>
+  </div>
+</div>
+
+<div class="main-div flex flex-col w-full px-10 bg-[#0A192F]">
+  <!-- Upper Heading -->
+  <div class="py-5 flex flex-col justify-center items-center gap-1">
+    <span class="text-3xl h-max text-[#F8FAFC] font-semibold"
+      >Hostel Allocation <span class="text-[#38BDF8]">Dashboard</span></span
+    >
+    <span class="text-[#E2E8F0] text-base"
+      >Upload Excel files and allocate rooms in seconds</span
+    >
+  </div>
+
+  <!-- Stats cards -->
+  <div class="stats grid grid-cols-4 gap-3">
+    <div class="grid-card">
+      <div class="card-logo flex items-center">
+        <Bed
+          class="w-16 h-16 rounded-full bg-[#1E3A8A33]/80 p-4 text-[#3B82F6] border border-[#1E3A8A33]"
+        />
+      </div>
+
+      <div class="card-info">
+        <span class="text-sm">Total Beds</span>
+        <span class="text-2xl text-[#E2E8F0] font-bold"
+          >{total_capacity ? total_capacity : "-"}</span
+        >
+        <span class="text-xs">Across all hostels</span>
+      </div>
     </div>
-    <div class="grid-card border border-black rounded px-4 py-2 text-center">
-      Participants: {participant_no}
+
+    <div class="grid-card">
+      <div class="card-logo">
+        <Users
+          class="w-16 h-16 rounded-full bg-[#5B21B633]/80 p-4 text-[#8B5CF6] border border-[#5B21B633]"
+        />
+      </div>
+
+      <div class="card-info">
+        <span class="text-sm">Participants</span>
+        <span class="text-2xl text-[#E2E8F0] font-bold"
+          >{total_capacity ? total_capacity : "-"}</span
+        >
+        <span class="text-xs">Total Registered</span>
+      </div>
     </div>
-    <div class="grid-card border border-black rounded px-4 py-2 text-center">
-      Alloted:
+
+    <div class="grid-card">
+      <div class="card-logo">
+        <Checkcircle
+          class="w-16 h-16 rounded-full bg-[#16653433]/80 p-4 text-[#22C55E] border border-[#16653433]"
+        />
+      </div>
+
+      <div class="card-info">
+        <span class="text-sm">Allocated</span>
+        <span class="text-2xl text-[#E2E8F0] font-bold"
+          >{total_capacity ? total_capacity : "-"}</span
+        >
+        <span class="text-xs">Successfully Alloted</span>
+      </div>
     </div>
-    <div class="grid-card border border-black rounded px-4 py-2 text-center">
-      Remaining Capacity:
+
+    <div class="grid-card">
+      <div class="card-logo">
+        <BedDouble
+          class="w-16 h-16 rounded-full bg-[#92400E33]/80 p-4 text-[#F59E0B] border border-[#92400E33]"
+        />
+      </div>
+
+      <div class="card-info">
+        <span class="text-sm">Remaining Beds</span>
+        <span class="text-2xl text-[#E2E8F0] font-bold"
+          >{total_capacity ? total_capacity : "-"}</span
+        >
+        <span class="text-xs">Vacant Beds</span>
+      </div>
     </div>
   </div>
 
-  <div class="upload-section flex flex-col gap-5 justify-center w-full">
+  <!-- <div class="upload-section flex flex-col gap-5 justify-center w-full">
     <div class="upload-div flex gap-5">
-      <div id="hostel_upload"
+      <div
+        id="hostel_upload"
         class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
       >
         <label
@@ -235,7 +335,8 @@
         />
       </div>
 
-      <div id="participant_upload"
+      <div
+        id="participant_upload"
         class="flex flex-col w-1/2 border border-dashed border-gray-500 text-center justify-center px-10 py-15 mt-5 rounded bg-blue-200/40"
       >
         <label
@@ -257,13 +358,86 @@
           type="file"
         />
       </div>
+    </div> -->
+
+  <div class="upload-section mt-3 grid grid-cols-3 gap-3">
+    <div class="upload-grid-card">
+      <div class="flex items-center gap-2">
+        <FileSpreadsheet
+          class="w-10 h-10 rounded-xl p-1 bg-[#3B82F626]/80 border border-[#3B82F626] text-[#3B82F6]"
+        />
+        <div class="text-[#E2E8F0] flex flex-col align-baseline">
+          <span class="text-base font-semibold">Hostel Excel File</span>
+          <span class="text-xs"
+            >Upload file containing hostel and room details</span
+          >
+        </div>
+      </div>
+      <div
+        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded"
+      >
+        <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
+        <span class="text-[#F8FAFC] text-sm"
+          >Drag & Drop your Excel file here</span
+        >
+        <span class="text-[#F8FAFC] text-sm">or</span>
+        <button
+          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm"
+          >Browse Files</button
+        >
+        <span class="text-[#64748B] align-bottom text-sm"
+          >Supports .xlsx files</span
+        >
+        <input type="file" onchange={handleHostelFile} class="hidden" />
+      </div>
+      <div class="upload-btn"></div>
     </div>
 
-    <button
-      disabled={allocated}
-      onclick={() => allocateRooms(participants, roomsCopy)}
-      >Allocate Rooms</button
-    >
+    <div class="upload-grid-card">
+      <div class="flex items-center gap-2">
+        <FileUser
+          class="w-10 h-10 rounded-xl p-1 bg-[#5B21B633]/80 border border-[#5B21B633] text-[#8B5CF6]"
+        />
+        <div class="text-[#E2E8F0] flex flex-col align-baseline">
+          <span class="text-base font-semibold">Participant Excel File</span>
+          <span class="text-xs"
+            >Upload file containing participant details</span
+          >
+        </div>
+      </div>
+      <div
+        class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded"
+      >
+        <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
+        <span class="text-[#F8FAFC] text-sm"
+          >Drag & Drop your Excel file here</span
+        >
+        <span class="text-[#F8FAFC] text-sm">or</span>
+        <button
+          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm"
+          >Browse Files</button
+        >
+        <span class="text-[#64748B] align-bottom text-sm"
+          >Supports .xlsx files</span
+        >
+        <input type="file" onchange={handleHostelFile} class="hidden" />
+      </div>
+      <div class="upload-btn"></div>
+    </div>
+
+    <div class="flex flex-col gap-10 text-center justify-center items-center bg-[#112240] border border-[#233554]">
+       <div>
+        <p>Ready to Allocate?</p>
+        <p>Upload both Excel files to enable room allocation</p>
+       </div>
+       <div>
+        <button class="px-10 py-1 flex gap-3 justify-center items-center border border-green-400 bg-green-600 rounded" onclick={()=>allocateRooms(participants, roomsCopy)} disabled>
+          <Users class="w-5 h-5"/>
+          Allocate Rooms
+        </button>
+       </div>
+    </div>
+
   </div>
 
   <div class="uploaded-data flex gap-5 px-5 py-5">
@@ -331,14 +505,50 @@
         </tbody>
       </table>
     </div>
-      
   </div>
 </div>
 
 <style>
-  i{
-    margin: auto;
-    padding: 1rem 0;
-    font-size: 1.5rem;
+  /* flex gap-3 px-2 py-3 border border-[#233554] bg-[#112240] rounded text-center */
+
+  .grid-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.75rem;
+    border: 1px solid #233445;
+    background-color: #112240;
+    border-radius: 0.5rem;
+  }
+
+  .card-logo {
+    display: flex;
+    align-items: center;
+  }
+
+  /* flex flex-col text-[#d5dadf] align-baseline text-left */
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    color: #d5dadf;
+    align-items: baseline;
+    text-align: left;
+  }
+
+  .upload-grid-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #112240;
+    border: 1px solid #233554;
+    border-radius: 0.5rem;
+    transition: 0.3s ease-in-out;
+  }
+  .upload-grid-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   }
 </style>

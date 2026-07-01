@@ -30,6 +30,8 @@
 		"vite": "^8.0.16"
 	},
 	"dependencies": {
+		"@lucide/svelte": "^1.22.0",
+		"lucide-svelte": "^1.0.1",
 		"xlsx": "^0.18.5"
 	}
 }
