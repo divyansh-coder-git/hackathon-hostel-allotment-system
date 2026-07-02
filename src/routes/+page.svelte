@@ -835,7 +835,7 @@
                       {#each participants as participant, index (participant.id ?? index)}
                         {@const status = getParticipantStatus(participant)}
                         <tr>
-                          <td>{participant.id ?? index + 1}</td>
+                          <td>{participant.id ?? index+1}</td>
                           <td>{participant.name}</td>
                           <td>{participant.gender}</td>
                           <td>
