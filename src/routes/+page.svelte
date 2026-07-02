@@ -60,7 +60,9 @@
   const allocationDisabled = $derived(
     rooms.length === 0 || participants.length === 0 || allocated,
   );
-  const hasUploadedFiles = $derived(rooms.length > 0 || participants.length > 0);
+  const hasUploadedFiles = $derived(
+    rooms.length > 0 || participants.length > 0,
+  );
   const hasBothFiles = $derived(rooms.length > 0 && participants.length > 0);
   const canDownload = $derived(allocated && allocations.length > 0);
   const totalHostels = $derived(
@@ -173,7 +175,7 @@
         currentAllocation.gender === participant.gender,
     );
 
-    if (!allocation || allocation.allottedRoom == "-") return "Not Alloted";
+    if (!allocation || allocation.allottedRoom === "-") return "Not Alloted";
 
     return "Allocated";
   }
@@ -449,7 +451,7 @@
 
 <div
   class:light-theme={theme === "light"}
-  class="main-div flex flex-col w-full px-10 bg-[#0A192F]"
+  class="main-div pb-10 flex flex-col w-full px-10 bg-[#0A192F]"
 >
   <!-- Upper Heading -->
   <div class="py-5 flex flex-col justify-center items-center gap-1">
@@ -700,7 +702,9 @@
 
     <div class="step-item">
       <span class:step-complete={allocated} class="step-number">2</span>
-      <span class="text-sm text-[#F8FAFC] font-semibold">Allocate Rooms</span>
+      <span class="text-sm w-fit text-[#F8FAFC] font-semibold"
+        >Allocate Rooms</span
+      >
       <span class="text-xs text-[#94A3B8]">System allocates rooms</span>
     </div>
 
@@ -810,7 +814,8 @@
                             <span
                               class={normalize(room.hostelType) === "boys"
                                 ? "type-badge boys-badge"
-                                : "type-badge girls-badge"}>{room.hostelType}</span
+                                : "type-badge girls-badge"}
+                              >{room.hostelType}</span
                             >
                           </td>
                         </tr>
@@ -818,7 +823,9 @@
                     </tbody>
                   </table>
                 {:else}
-                  <div class="empty-table-text">Upload hostel file to preview rooms</div>
+                  <div class="empty-table-text">
+                    Upload hostel file to preview rooms
+                  </div>
                 {/if}
               {:else if previewTab === "participants"}
                 {#if participants.length}
@@ -835,7 +842,7 @@
                       {#each participants as participant, index (participant.id ?? index)}
                         {@const status = getParticipantStatus(participant)}
                         <tr>
-                          <td>{participant.id ?? index+1}</td>
+                          <td>{participant.id ?? index + 1}</td>
                           <td>{participant.name}</td>
                           <td>{participant.gender}</td>
                           <td>
@@ -844,7 +851,8 @@
                                 ? "status-badge status-done"
                                 : status === "Pending"
                                   ? "status-badge status-pending"
-                                  : "status-badge status-missing"}>{status}</span
+                                  : "status-badge status-missing"}
+                              >{status}</span
                             >
                           </td>
                         </tr>
@@ -856,33 +864,31 @@
                     Upload participant file to preview participants
                   </div>
                 {/if}
-              {:else}
-                {#if allocated && allocations.length}
-                  <table class="preview-table">
-                    <thead>
+              {:else if allocated && allocations.length}
+                <table class="preview-table">
+                  <thead>
+                    <tr>
+                      <th>Participant Name</th>
+                      <th>Gender</th>
+                      <th>Allotted Hostel</th>
+                      <th>Allotted Room</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each allocations as allocation (allocation.id)}
                       <tr>
-                        <th>Participant Name</th>
-                        <th>Gender</th>
-                        <th>Allotted Hostel</th>
-                        <th>Allotted Room</th>
+                        <td>{allocation.participantName}</td>
+                        <td>{allocation.gender}</td>
+                        <td>{allocation.allottedHostel}</td>
+                        <td>{allocation.allottedRoom}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {#each allocations as allocation (allocation.id)}
-                        <tr>
-                          <td>{allocation.participantName}</td>
-                          <td>{allocation.gender}</td>
-                          <td>{allocation.allottedHostel}</td>
-                          <td>{allocation.allottedRoom}</td>
-                        </tr>
-                      {/each}
-                    </tbody>
-                  </table>
-                {:else}
-                  <div class="empty-table-text">
-                    Allocate rooms to preview allocation results
-                  </div>
-                {/if}
+                    {/each}
+                  </tbody>
+                </table>
+              {:else}
+                <div class="empty-table-text">
+                  Allocate rooms to preview allocation results
+                </div>
               {/if}
             </div>
           {/key}
@@ -906,7 +912,8 @@
             <span class="text-sm text-[#E2E8F0] font-semibold"
               >Last Allocation</span
             >
-            <span class="text-xs text-[#bfc2c6]">{lastAllocationAt ?? "-"}</span>
+            <span class="text-xs text-[#bfc2c6]">{lastAllocationAt ?? "-"}</span
+            >
           </div>
         </div>
 
@@ -917,7 +924,8 @@
             />
           </div>
           <div class="flex flex-col">
-            <span class="text-sm text-[#E2E8F0] font-semibold">Total Hostels</span
+            <span class="text-sm text-[#E2E8F0] font-semibold"
+              >Total Hostels</span
             >
             <span class="text-xs text-[#bfc2c6]"
               >{rooms.length ? totalHostels : "-"}</span
@@ -932,7 +940,9 @@
             />
           </div>
           <div class="flex flex-col">
-            <span class="text-sm text-[#E2E8F0] font-semibold">Boys Hostels</span>
+            <span class="text-sm text-[#E2E8F0] font-semibold"
+              >Boys Hostels</span
+            >
             <span class="text-xs text-[#bfc2c6]"
               >{rooms.length ? boysHostels : "-"}</span
             >
@@ -946,33 +956,53 @@
             />
           </div>
           <div class="flex flex-col">
-            <span class="text-sm text-[#E2E8F0] font-semibold">Girls Hostels</span
+            <span class="text-sm text-[#E2E8F0] font-semibold"
+              >Girls Hostels</span
             >
             <span class="text-xs text-[#bfc2c6]"
               >{rooms.length ? girlsHostels : "-"}</span
             >
           </div>
         </div>
+
+        <div class="download-section flex flex-col items-center gap-2 my-4">
+          <button
+            type="button"
+            class="download-btn"
+            disabled={!canDownload}
+            onclick={downloadAllocationExcel}
+          >
+            <Download class="w-5 h-5" />
+            Download Allocation Excel
+          </button>
+          <span class="text-xs text-[#94A3B8]">
+            {canDownload
+              ? "Export the allocation results to Excel file"
+              : "This will be available after allocation"}
+          </span>
+        </div>
       </div>
     {/if}
   </div>
+</div>
 
-  <div class="download-section flex flex-col items-center gap-2 my-4">
-    <button
-      type="button"
-      class="download-btn"
-      disabled={!canDownload}
-      onclick={downloadAllocationExcel}
+<div
+  class="footer bg-[#0B1220]/80 w-full py-3 flex text-[#F8FAFC] flex-col justify-center items-center text-sm"
+>
+  <span>Built by Divyansh Pandey</span>
+  <span class="text-xs">Made with Svelte • Tailwind CSS • SheetJS • TypeScript</span>
+  <span class="text-xs">Special thanks to ChatGPT, Codex and Gemini for being my debugging partner throughout this project.</span>
+  
+  <span class="mt-1"
+    ><a href="https://github.com/divyansh-coder-git" target="_blank">GitHub</a>
+    •
+    <a href="https://www.linkedin.com/in/divyansh-pandey-nits/" target="_blank"
+      >LinkedIn</a
     >
-      <Download class="w-5 h-5" />
-      Download Allocation Excel
-    </button>
-    <span class="text-sm text-[#94A3B8]">
-      {canDownload
-        ? "Export the allocation results to Excel file"
-        : "This will be available after allocation"}
-    </span>
-  </div>
+    •
+    <a href="https://instagram.com/divyansh_coder" target="_blank">Instagram</a
+    ></span
+  >
 </div>
 
 <style>
@@ -981,9 +1011,9 @@
     transition: background-color 0.25s ease;
   }
 
-  :global(body:has(.main-div.light-theme)) {
+  /* :global(body:has(.main-div.light-theme)) {
     background-color: #eaf2fb;
-  }
+  } */
 
   .navbar,
   .main-div,
@@ -1005,7 +1035,7 @@
       transform 0.25s ease;
   }
 
-  .navbar.light-theme {
+  /* .navbar.light-theme {
     background-color: #ffffff !important;
     border-bottom: 1px solid #cbd5e1;
   }
@@ -1045,8 +1075,8 @@
   .main-div.light-theme :global(.text-\[\#64748B\]),
   .main-div.light-theme :global(.text-\[\#94A3B8\]) {
     color: #475569 !important;
-  }
-
+  } */
+  /* 
   .main-div.light-theme .preview-table {
     color: #0f172a;
     border-color: #cbd5e1;
@@ -1083,7 +1113,7 @@
     background-color: #cbd5e1;
     border-color: #cbd5e1;
     color: #64748b;
-  }
+  } */
 
   .grid-card {
     display: flex;
@@ -1163,10 +1193,9 @@
 
   .step-tracker {
     display: grid;
-    grid-template-columns: minmax(8rem, 1fr) minmax(4rem, 0.8fr) minmax(
-        8rem,
-        1fr
-      ) minmax(4rem, 0.8fr) minmax(8rem, 1fr);
+    grid-template-columns:
+      minmax(8rem, 1fr) minmax(4rem, 0.8fr) minmax(8rem, 1fr)
+      minmax(4rem, 0.8fr) minmax(8rem, 1fr);
     align-items: start;
     gap: 0.75rem;
   }
@@ -1353,7 +1382,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-width: 24rem;
+    width: fit-content;
     padding: 0.65rem 1rem;
     border: 1px solid #16a34a;
     border-radius: 0.5rem;
@@ -1361,6 +1390,11 @@
     color: #f8fafc;
     font-weight: 700;
     cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .download-btn:hover {
+    background-color: #13843c;
   }
 
   .download-btn:disabled {
