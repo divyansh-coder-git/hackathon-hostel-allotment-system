@@ -1,4 +1,3 @@
-
 import type { Allocation, Participant, Room } from "./types";
 
 function normalize(value: string) {
