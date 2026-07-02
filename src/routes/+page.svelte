@@ -1019,7 +1019,6 @@
   .main-div,
   .grid-card,
   .upload-grid-card,
-  .allocation-card,
   .data-preview,
   .step-tracker,
   .quick-info,
