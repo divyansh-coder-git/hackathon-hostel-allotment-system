@@ -169,11 +169,11 @@
 
     const allocation = allocations.find(
       (currentAllocation) =>
-        currentAllocation.participantName === participant.name &&
+        currentAllocation.id === participant.id &&
         currentAllocation.gender === participant.gender,
     );
 
-    if (!allocation || allocation.allottedRoom === "-") return "Not Alloted";
+    if (!allocation || allocation.allottedRoom == "-") return "Not Alloted";
 
     return "Allocated";
   }
