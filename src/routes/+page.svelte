@@ -1,5 +1,7 @@
 <script lang="ts">
   import * as XLSX from "xlsx";
+  import { allocateRooms as buildAllocations } from "$lib/allocation";
+  import type { Allocation, Participant, Room } from "$lib/types";
   import Building2 from "@lucide/svelte/icons/building-2";
   import Moon from "@lucide/svelte/icons/moon";
   import Bed from "@lucide/svelte/icons/bed";
@@ -9,6 +11,10 @@
   import Cloudupload from "@lucide/svelte/icons/cloud-upload";
   import FileSpreadsheet from "@lucide/svelte/icons/file-spreadsheet";
   import FileUser from "@lucide/svelte/icons/file-user";
+  import List from "@lucide/svelte/icons/list";
+  import Clock from "@lucide/svelte/icons/clock-3";
+  import Mars from "@lucide/svelte/icons/mars";
+  import Venus from "@lucide/svelte/icons/venus";
   //   import {
 
   //Cloudupload
@@ -25,149 +31,312 @@
   //     Venus
   // } from "lucide-svelte";
 
-  interface Room {
-    hostelName: string;
-    roomNumber: string;
-    capacity: number;
-    hostelType: "Boys" | "Girls" | string;
+  interface HostelRow {
+    "Hostel Name": string;
+    "Room Number": string | number;
+    Capacity: string | number;
+    "Hostel Type": string;
   }
 
-  interface Participant {
-    id: number;
+  interface ParticipantRow {
+    "Participant Name": string;
+    Gender: string;
+  }
+
+  interface UploadedFileInfo {
     name: string;
-    gender: string;
+    size: number;
   }
 
-  interface Allocation {
-    id: number;
-    participantName: string;
-    gender: string;
-    allottedHostel: string;
-    allottedRoom: string;
-  }
+  let hostelFileInput = $state<HTMLInputElement | null>(null);
+  let participantFileInput = $state<HTMLInputElement | null>(null);
+  let hostelFileInfo = $state<UploadedFileInfo | null>(null);
+  let participantFileInfo = $state<UploadedFileInfo | null>(null);
 
   let rooms = $state<Room[]>([]);
   let participants = $state<Participant[]>([]);
   let allocations: Allocation[] = $state([]);
 
   let total_capacity = $state(0);
-  let allocated = $state(true);
+  let remaining_capacity = $state(0);
+  let allocated = $state(false);
+  let allocated_participants = $state(0);
   let participant_no = $state(0);
   let unallocated_participants = $state(0);
+  let lastAllocationAt = $state<string | null>(null);
 
-  async function handleHostelFile(event: Event) {
-    let input = event.target as HTMLInputElement;
-    let file = input.files?.[0];
+  const allocationDisabled = $derived(
+    rooms.length === 0 || participants.length === 0 || allocated,
+  );
+  const totalHostels = $derived(
+    new Set(rooms.map((room) => room.hostelName)).size,
+  );
+  const boysHostels = $derived(
+    new Set(
+      rooms
+        .filter((room) => normalize(room.hostelType) === "boys")
+        .map((room) => room.hostelName),
+    ).size,
+  );
+  const girlsHostels = $derived(
+    new Set(
+      rooms
+        .filter((room) => normalize(room.hostelType) === "girls")
+        .map((room) => room.hostelName),
+    ).size,
+  );
 
-    if (!file) return;
+  function normalize(value: string) {
+    return value.trim().toLowerCase();
+  }
 
-    let buffer = await file?.arrayBuffer();
-    let workbook = XLSX.read(buffer);
-    let sheet = workbook.Sheets[workbook.SheetNames[0]];
+  function isExcelFile(file: File) {
+    return /\.(xlsx|xls)$/i.test(file.name);
+  }
 
-    const rows = XLSX.utils.sheet_to_json(sheet);
+  function formatFileSize(size: number) {
+    if (size < 1024) return `${size} B`;
 
-    if (!rows) {
-      return;
-    } else if (rows.length === 0) {
-      alert("Hostel file is empty");
-      return;
-    }
+    const sizeInKb = size / 1024;
+    if (sizeInKb < 1024) return `${sizeInKb.toFixed(1)} KB`;
 
-    const requiredHeaders = [
-      "Hostel Name",
-      "Room Number",
-      "Capacity",
-      "Hostel Type",
-    ];
+    return `${(sizeInKb / 1024).toFixed(1)} MB`;
+  }
 
-    const headers = XLSX.utils.sheet_to_json(sheet, {
+  function getFileInfo(file: File): UploadedFileInfo {
+    return {
+      name: file.name,
+      size: file.size,
+    };
+  }
+
+  async function readFirstSheet(file: File) {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer);
+    const sheetName = workbook.SheetNames[0];
+
+    if (!sheetName) return null;
+
+    return workbook.Sheets[sheetName] ?? null;
+  }
+
+  function getHeaders(sheet: XLSX.WorkSheet) {
+    const rows = XLSX.utils.sheet_to_json<string[]>(sheet, {
       header: 1,
-    })[0] as string[];
-
-    const valid =
-      headers.length === requiredHeaders.length &&
-      headers.every((header, index) => header === requiredHeaders[index]);
-
-    if (!valid) {
-      alert("Invalid Hostel Excel format");
-      return;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rooms = rows.map((row: any) => {
-      total_capacity += row["Capacity"];
-      return {
-        hostelName: row["Hostel Name"],
-        roomNumber: row["Room Number"],
-        capacity: row["Capacity"],
-        hostelType: row["Hostel Type"],
-      };
+      blankrows: false,
     });
 
-    console.log(rooms);
-    allocated = false;
+    return (rows[0] ?? []).map((header) => String(header).trim());
+  }
+
+  function hasExactHeaders(headers: string[], requiredHeaders: string[]) {
+    return (
+      headers.length === requiredHeaders.length &&
+      headers.every((header, index) => header === requiredHeaders[index])
+    );
+  }
+
+  function resetAllocationState() {
     allocations = [];
+    allocated = false;
+    allocated_participants = 0;
+    unallocated_participants = 0;
+    remaining_capacity = total_capacity;
+    lastAllocationAt = null;
+  }
+
+  async function processHostelFile(file: File) {
+    if (!isExcelFile(file)) {
+      alert("Please upload a valid Excel file.");
+      return;
+    }
+
+    try {
+      const sheet = await readFirstSheet(file);
+
+      if (!sheet) {
+        alert("Hostel file is empty");
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json<HostelRow>(sheet, {
+        defval: "",
+      });
+
+      if (rows.length === 0) {
+        alert("Hostel file is empty");
+        return;
+      }
+
+      const requiredHeaders = [
+        "Hostel Name",
+        "Room Number",
+        "Capacity",
+        "Hostel Type",
+      ];
+
+      if (!hasExactHeaders(getHeaders(sheet), requiredHeaders)) {
+        alert("Invalid Hostel Excel format");
+        return;
+      }
+
+      const parsedRooms = rows.map((row) => ({
+        hostelName: String(row["Hostel Name"]).trim(),
+        roomNumber: String(row["Room Number"]).trim(),
+        capacity: Number(row["Capacity"]),
+        hostelType: String(row["Hostel Type"]).trim(),
+      }));
+
+      if (
+        parsedRooms.length === 0 ||
+        parsedRooms.some(
+          (room) =>
+            !room.hostelName ||
+            !room.roomNumber ||
+            !room.hostelType ||
+            !Number.isFinite(room.capacity) ||
+            room.capacity <= 0,
+        )
+      ) {
+        alert("Hostel file contains invalid room details");
+        return;
+      }
+
+      rooms = parsedRooms;
+      total_capacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
+      hostelFileInfo = getFileInfo(file);
+      resetAllocationState();
+    } catch {
+      alert("Could not read the hostel Excel file");
+    }
+  }
+
+  async function processParticipantFile(file: File) {
+    if (!isExcelFile(file)) {
+      alert("Please upload a valid Excel file.");
+      return;
+    }
+
+    try {
+      const sheet = await readFirstSheet(file);
+
+      if (!sheet) {
+        alert("Participant file is empty");
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json<ParticipantRow>(sheet, {
+        defval: "",
+      });
+
+      if (rows.length === 0) {
+        alert("Participant file is empty");
+        return;
+      }
+
+      const requiredHeaders = ["Participant Name", "Gender"];
+
+      if (!hasExactHeaders(getHeaders(sheet), requiredHeaders)) {
+        alert("Invalid Participant Excel format");
+        return;
+      }
+
+      const parsedParticipants = rows.map((row, index) => ({
+        id: index + 1,
+        name: String(row["Participant Name"]).trim(),
+        gender: String(row["Gender"]).trim(),
+      }));
+
+      if (
+        parsedParticipants.length === 0 ||
+        parsedParticipants.some(
+          (participant) =>
+            !participant.name ||
+            !["male", "female"].includes(normalize(participant.gender)),
+        )
+      ) {
+        alert("Participant file contains invalid participant details");
+        return;
+      }
+
+      participants = parsedParticipants;
+      participant_no = participants.length;
+      participantFileInfo = getFileInfo(file);
+      resetAllocationState();
+    } catch {
+      alert("Could not read the participant Excel file");
+    }
+  }
+
+  async function handleHostelFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (file) {
+      await processHostelFile(file);
+    }
+
+    input.value = "";
   }
 
   async function handleParticipantFile(event: Event) {
-    let input = event.target as HTMLInputElement;
-    let file = input.files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
 
-    if (!file) return;
-
-    let buffer = await file?.arrayBuffer();
-    let workbook = XLSX.read(buffer);
-    let sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-    const rows = XLSX.utils.sheet_to_json(sheet);
-
-    if (!rows) {
-      return;
-    } else if (rows.length === 0) {
-      alert("Participant file is empty");
-      return;
+    if (file) {
+      await processParticipantFile(file);
     }
 
-    const requiredHeaders = ["Participant Name", "Gender"];
-
-    const headers = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-    })[0] as string[];
-
-    const valid =
-      headers.length === requiredHeaders.length &&
-      headers.every((header, index) => header === requiredHeaders[index]);
-
-    if (!valid) {
-      alert("Invalid Participant Excel format");
-      return;
-    }
-
-    console.log(rows);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    participants = rows.map((row: any, i) => {
-      i++;
-      return {
-        id: i,
-        name: row["Participant Name"],
-        gender: row["Gender"],
-      };
-    });
-
-    participant_no = participants.length;
-
-    allocated = false;
-    allocations = [];
+    input.value = "";
   }
 
-  const roomsCopy = $derived(rooms);
+  function openFilePicker(input: HTMLInputElement | null) {
+    if (!input) return;
 
-  function allocateRooms(participants: Participant[], roomsCopy: Room[]) {
-    console.log("Function executed");
+    input.value = "";
+    input.click();
+  }
 
-    if (roomsCopy.length === 0) {
+  function handleDragOver(event: DragEvent) {
+    event.preventDefault();
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+  }
+
+  async function handleHostelDrop(event: DragEvent) {
+    event.preventDefault();
+
+    const file = event.dataTransfer?.files?.[0];
+
+    if (file) {
+      await processHostelFile(file);
+    }
+  }
+
+  async function handleParticipantDrop(event: DragEvent) {
+    event.preventDefault();
+
+    const file = event.dataTransfer?.files?.[0];
+
+    if (file) {
+      await processParticipantFile(file);
+    }
+  }
+
+  function formatAllocationTime() {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+  }
+
+  function handleAllocateRooms() {
+    if (rooms.length === 0) {
       alert("Upload a valid hostel file.");
       return;
     } else if (participants.length === 0) {
@@ -175,44 +344,20 @@
       return;
     }
 
-    let i = 0;
-    for (const participant of participants) {
-      i++;
-      let room;
-      let requiredHostel = participant.gender === "Male" ? "Boys" : "Girls";
-      room = roomsCopy.find((room) => {
-        return room.hostelType == requiredHostel && room.capacity > 0;
-      });
+    allocations = buildAllocations(participants, rooms);
+    allocated_participants = allocations.filter(
+      (allocation) => allocation.allottedRoom !== "-",
+    ).length;
+    unallocated_participants = participants.length - allocated_participants;
+    remaining_capacity = total_capacity - allocated_participants;
+    allocated = true;
+    lastAllocationAt = formatAllocationTime();
 
-      if (!room) {
-        unallocated_participants++;
-        allocations.push({
-          id: i,
-          participantName: participant.name,
-          gender: participant.gender,
-          allottedHostel: "Not Alloted",
-          allottedRoom: "-",
-        });
-      } else {
-        allocations.push({
-          id: i,
-          participantName: participant.name,
-          gender: participant.gender,
-          allottedHostel: room.hostelName,
-          allottedRoom: room.roomNumber,
-        });
-        room.capacity--;
-        total_capacity--;
-      }
-    }
-    console.log(allocations);
-    if (unallocated_participants != 0) {
+    if (unallocated_participants !== 0) {
       alert(
         `${unallocated_participants} participants were not allocated rooms`,
       );
     }
-    allocated = true;
-    return allocations;
   }
 </script>
 
@@ -255,7 +400,7 @@
       <div class="card-info">
         <span class="text-sm">Total Beds</span>
         <span class="text-2xl text-[#E2E8F0] font-bold"
-          >{total_capacity ? total_capacity : "-"}</span
+          >{rooms.length ? total_capacity : "-"}</span
         >
         <span class="text-xs">Across all hostels</span>
       </div>
@@ -287,7 +432,7 @@
       <div class="card-info">
         <span class="text-sm">Allocated</span>
         <span class="text-2xl text-[#E2E8F0] font-bold"
-          >{total_capacity ? total_capacity : "-"}</span
+          >{allocated ? allocated_participants : "-"}</span
         >
         <span class="text-xs">Successfully Alloted</span>
       </div>
@@ -303,7 +448,7 @@
       <div class="card-info">
         <span class="text-sm">Remaining Beds</span>
         <span class="text-2xl text-[#E2E8F0] font-bold"
-          >{total_capacity ? total_capacity : "-"}</span
+          >{rooms.length ? remaining_capacity : "-"}</span
         >
         <span class="text-xs">Vacant Beds</span>
       </div>
@@ -326,21 +471,52 @@
 
       <div
         class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded-lg transform duration-300 hover:scale-102 hover:bg-[#1b4286]"
+        role="group"
+        aria-label="Hostel file upload"
+        ondragenter={handleDragOver}
+        ondragover={handleDragOver}
+        ondrop={handleHostelDrop}
       >
-        <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
-        <span class="text-[#F8FAFC] text-sm"
-          >Drag & Drop your Excel file here</span
-        >
-        <span class="text-[#F8FAFC] text-sm">or</span>
-        <button
-          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
-          >Browse Files</button
-        >
-        <span class="text-[#64748B] align-bottom text-sm"
-          >Supports .xlsx files</span
-        >
-        <input type="file" onchange={handleHostelFile} class="hidden" />
+        {#if hostelFileInfo}
+          <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
+          <span
+            class="text-[#F8FAFC] text-sm text-center break-all px-2"
+            title={hostelFileInfo.name}>{hostelFileInfo.name}</span
+          >
+          <span class="text-[#64748B] align-bottom text-sm"
+            >{formatFileSize(hostelFileInfo.size)}</span
+          >
+          <button
+            type="button"
+            onclick={() => openFilePicker(hostelFileInput)}
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            >Change File</button
+          >
+        {:else}
+          <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
+          <span class="text-[#F8FAFC] text-sm"
+            >Drag & Drop your Excel file here</span
+          >
+          <span class="text-[#F8FAFC] text-sm">or</span>
+          <button
+            type="button"
+            onclick={() => openFilePicker(hostelFileInput)}
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            >Browse Files</button
+          >
+          <span class="text-[#64748B] align-bottom text-sm"
+            >Supports .xlsx files</span
+          >
+        {/if}
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          onchange={handleHostelFile}
+          bind:this={hostelFileInput}
+          class="hidden"
+        />
       </div>
+
       <div class="upload-btn"></div>
     </div>
 
@@ -357,20 +533,50 @@
       </div>
       <div
         class="upload-input py-3 flex flex-col items-center border border-dashed border-gray-500 rounded-lg transform duration-300 hover:scale-102 hover:bg-[#1b4286]"
+        role="group"
+        aria-label="Participant file upload"
+        ondragenter={handleDragOver}
+        ondragover={handleDragOver}
+        ondrop={handleParticipantDrop}
       >
-        <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
-        <span class="text-[#F8FAFC] text-sm"
-          >Drag & Drop your Excel file here</span
-        >
-        <span class="text-[#F8FAFC] text-sm">or</span>
-        <button
-          class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
-          >Browse Files</button
-        >
-        <span class="text-[#64748B] align-bottom text-sm"
-          >Supports .xlsx files</span
-        >
-        <input type="file" onchange={handleHostelFile} class="hidden" />
+        {#if participantFileInfo}
+          <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
+          <span
+            class="text-[#F8FAFC] text-sm text-center break-all px-2"
+            title={participantFileInfo.name}>{participantFileInfo.name}</span
+          >
+          <span class="text-[#64748B] align-bottom text-sm"
+            >{formatFileSize(participantFileInfo.size)}</span
+          >
+          <button
+            type="button"
+            onclick={() => openFilePicker(participantFileInput)}
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            >Change File</button
+          >
+        {:else}
+          <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
+          <span class="text-[#F8FAFC] text-sm"
+            >Drag & Drop your Excel file here</span
+          >
+          <span class="text-[#F8FAFC] text-sm">or</span>
+          <button
+            type="button"
+            onclick={() => openFilePicker(participantFileInput)}
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            >Browse Files</button
+          >
+          <span class="text-[#64748B] align-bottom text-sm"
+            >Supports .xlsx files</span
+          >
+        {/if}
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          onchange={handleParticipantFile}
+          bind:this={participantFileInput}
+          class="hidden"
+        />
       </div>
       <div class="upload-btn"></div>
     </div>
@@ -387,8 +593,8 @@
       <div class="flex flex-col gap-2">
         <button
           class="grow py-2 flex gap-3 justify-center items-center border font-semibold cursor-pointer text-white border-blue-600 bg-blue-500 hover:bg-blue-600 rounded disabled:bg-gray-400/70 disabled:text-gray-800 disabled:border disabled:border-gray-500 disabled:cursor-not-allowed"
-          onclick={() => allocateRooms(participants, roomsCopy)}
-          disabled={allocated}
+          onclick={handleAllocateRooms}
+          disabled={allocationDisabled}
         >
           <Users class="w-5 h-5" />
           Allocate Rooms
@@ -399,75 +605,82 @@
       </div>
     </div>
   </div>
-
-  <!-- <div class="uploaded-data flex gap-5 px-5 py-5">
-    <div class="w-1/3">
-      <table>
-        <thead>
-          <tr>
-            <th>Hostel Name</th>
-            <th>Room Number</th>
-            <th>Capacity</th>
-            <th>Hostel Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each roomsCopy as room (room.roomNumber)}
-            <tr>
-              <td>{room.hostelName}</td>
-              <td>{room.roomNumber}</td>
-              <td>{room.capacity}</td>
-              <td>{room.hostelType}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+  
+  <div
+    class="data-preview flex gap-2 bg-[#112240] py-3 px-5 mt-3 rounded-lg border border-[#233554]"
+  >
+    <div class="flex flex-col flex-1">
+      <div class="flex gap-2 items-center">
+        <List class="w-5 h-5 text-[#3B82F6]" />
+        <span class="text-base text-[#E2E8F0] font-semibold">Data Preview</span>
+      </div>
+      <div class="data-div"></div>
     </div>
 
-    <div class="w-1/3">
-      <table>
-        <thead>
-          <tr>
-            <th>Participant Name</th>
-            <th>Gender</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each participants as participant (participant.id)}
-            <tr>
-              <td>{participant.name}</td>
-              <td>{participant.gender}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+    <div
+      class="quick-info flex flex-col gap-3 px-4 py-2 align-baseline border border-[#233554] rounded w-1/4"
+    >
+      <span class="text-base text-[#E2E8F0] font-semibold">Quick Info</span>
 
-    <div class="w-1/3">
-      <table>
-        <thead>
-          <tr>
-            <th>Participant Name</th>
-            <th>Gender</th>
-            <th>Alloted Hostel</th>
-            <th>Alloted Room</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each allocations as allocation (allocation.id)}
-            <tr>
-              <td>{allocation.participantName}</td>
-              <td>{allocation.gender}</td>
-              <td>{allocation.allottedHostel}</td>
-              <td>{allocation.allottedRoom}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
-  </div> -->
+      <div class="flex gap-4 items-center">
+        <div class="quick-info-logo">
+          <Clock
+            class="w-8 h-8 text-[#3B82F6] rounded p-1 bg-[#1D4ED840]/80 border border-[#1D4ED840]"
+          />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm text-[#E2E8F0] font-semibold"
+            >Last Allocation</span
+          >
+          <span class="text-xs text-[#bfc2c6]">{lastAllocationAt ?? "-"}</span>
+        </div>
+      </div>
 
-  <div></div>
+      <div class="flex gap-4 items-center">
+        <div class="quick-info-logo">
+          <Building2
+            class="w-8 h-8 text-[#22C55E] rounded p-1 bg-[#16A34A40]/80 border border-[#16A34A40]"
+          />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm text-[#E2E8F0] font-semibold">Total Hostels</span
+          >
+          <span class="text-xs text-[#bfc2c6]"
+            >{rooms.length ? totalHostels : "-"}</span
+          >
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-center">
+        <div class="quick-info-logo">
+          <Mars
+            class="w-8 h-8 text-[#38BDF8] rounded p-1 bg-[#0284C740]/80 border border-[#0284C740]"
+          />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm text-[#E2E8F0] font-semibold">Boys Hostels</span>
+          <span class="text-xs text-[#bfc2c6]"
+            >{rooms.length ? boysHostels : "-"}</span
+          >
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-center">
+        <div class="quick-info-logo">
+          <Venus
+            class="w-8 h-8 text-[#EC4899] rounded p-1 bg-[#BE185D40]/80 border border-[#BE185D40]"
+          />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm text-[#E2E8F0] font-semibold">Girls Hostels</span
+          >
+          <span class="text-xs text-[#bfc2c6]"
+            >{rooms.length ? girlsHostels : "-"}</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>

@@ -6,11 +6,13 @@ export interface Room {
 }
 
 export interface Participant {
+    id?: number;
     name: string;
     gender: "Male" | "Female" | string;
 }
 
 export interface Allocation {
+    id: number;
     participantName: string;
     gender: string;
     allottedHostel: string;
