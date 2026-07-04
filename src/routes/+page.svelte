@@ -1031,8 +1031,7 @@
   .quick-info,
   .preview-table th,
   .preview-table td,
-  .download-btn,
-  .theme-btn {
+  .download-btn{
     transition:
       background-color 0.25s ease,
       border-color 0.25s ease,
