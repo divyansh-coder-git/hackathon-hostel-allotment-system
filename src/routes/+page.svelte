@@ -440,7 +440,7 @@
     >
   </div>
 
-  <div>
+  <!-- <div>
     <button
       type="button"
       class="hidden lg:block theme-btn border border-[#233554] px-2 py-1 rounded"
@@ -452,7 +452,7 @@
         <Sun class="w-4 h-4 text-amber-500" />
       {/if}
     </button>
-  </div>
+  </div> -->
 </div>
 
 <div
