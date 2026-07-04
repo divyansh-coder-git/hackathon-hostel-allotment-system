@@ -44,6 +44,7 @@
   let participantFileInfo = $state<UploadedFileInfo | null>(null);
   let previewTab = $state<PreviewTab>("rooms");
   let theme = $state<Theme>("dark");
+  let quick_info_div: HTMLDivElement;
 
   let rooms = $state<Room[]>([]);
   let participants = $state<Participant[]>([]);
@@ -414,22 +415,27 @@
     lastAllocationAt = formatAllocationTime();
     previewTab = "allocation";
 
+    if (quick_info_div) {
+      quick_info_div.scrollIntoView({ behavior: 'smooth' });
+    }
+
     if (unallocated_participants !== 0) {
       alert(
         `${unallocated_participants} participants were not allocated rooms`,
       );
     }
+
   }
 </script>
 
 <!-- Navbar -->
 <div
   class:light-theme={theme === "light"}
-  class="navbar px-5 py-1 bg-[#0B1220] flex justify-between items-center"
+  class="navbar px-3 lg:px-5 py-1 bg-[#0B1220] flex justify-between items-center"
 >
-  <div class="w-fit flex items-center gap-3">
-    <Building2 class="w-7 h-7 text-sky-400" />
-    <span class="text-xl text-[#F8FAFC] font-semibold"
+  <div class="w-fit flex items-center gap-1 lg:gap-3">
+    <Building2 class="w-5 h-5 lg:w-7 lg:h-7 text-sky-400" />
+    <span class="text-base lg:text-xl text-[#F8FAFC] font-semibold"
       >Hostel Allocation System</span
     >
   </div>
@@ -437,7 +443,7 @@
   <div>
     <button
       type="button"
-      class="theme-btn border border-[#233554] px-2 py-1 rounded"
+      class="hidden lg:block theme-btn border border-[#233554] px-2 py-1 rounded"
       aria-label="Toggle theme"
     >
       {#if theme === "dark"}
@@ -451,30 +457,30 @@
 
 <div
   class:light-theme={theme === "light"}
-  class="main-div pb-10 flex flex-col w-full px-10 bg-[#0A192F]"
+  class="main-div pb-10 flex flex-col w-full px-5 lg:px-10 bg-[#0A192F]"
 >
   <!-- Upper Heading -->
   <div class="py-5 flex flex-col justify-center items-center gap-1">
-    <span class="text-3xl h-max text-[#F8FAFC] font-semibold"
+    <span class="text-xl lg:text-3xl h-max text-[#F8FAFC] font-semibold"
       >Hostel Allocation <span class="text-[#38BDF8]">Dashboard</span></span
     >
-    <span class="text-[#E2E8F0] text-base"
+    <span class="text-[#E2E8F0] text-xs lg:text-base"
       >Upload Excel files and allocate rooms in seconds</span
     >
   </div>
 
   <!-- Stats cards -->
-  <div class="stats grid grid-cols-4 gap-3">
+  <div class="stats grid grid-cols-1 lg:grid-cols-4 gap-3">
     <div class="grid-card">
       <div class="card-logo flex items-center">
         <Bed
-          class="w-16 h-16 rounded-full bg-[#1E3A8A33]/80 p-4 text-[#3B82F6] border border-[#1E3A8A33]"
+          class="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[#1E3A8A33]/80 p-2 lg:p-4 text-[#3B82F6] border border-[#1E3A8A33]"
         />
       </div>
 
       <div class="card-info">
-        <span class="text-sm">Total Beds</span>
-        <span class="text-2xl text-[#E2E8F0] font-bold"
+        <span class="text-xs lg:text-sm">Total Beds</span>
+        <span class="text-base lg:text-2xl text-[#E2E8F0] font-bold"
           >{rooms.length ? total_capacity : "-"}</span
         >
         <span class="text-xs">Across all hostels</span>
@@ -484,13 +490,13 @@
     <div class="grid-card">
       <div class="card-logo">
         <Users
-          class="w-16 h-16 rounded-full bg-[#5B21B633]/80 p-4 text-[#8B5CF6] border border-[#5B21B633]"
+          class="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[#5B21B633]/80 p-2 lg:p-4 text-[#8B5CF6] border border-[#5B21B633]"
         />
       </div>
 
       <div class="card-info">
-        <span class="text-sm">Participants</span>
-        <span class="text-2xl text-[#E2E8F0] font-bold"
+        <span class="text-xs lg:text-sm">Participants</span>
+        <span class="text-base lg:text-2xl text-[#E2E8F0] font-bold"
           >{participant_no ? participant_no : "-"}</span
         >
         <span class="text-xs">Total Registered</span>
@@ -500,13 +506,13 @@
     <div class="grid-card">
       <div class="card-logo">
         <Checkcircle
-          class="w-16 h-16 rounded-full bg-[#16653433]/80 p-4 text-[#22C55E] border border-[#16653433]"
+          class="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[#16653433]/80 p-2 lg:p-4 text-[#22C55E] border border-[#16653433]"
         />
       </div>
 
       <div class="card-info">
-        <span class="text-sm">Allocated</span>
-        <span class="text-2xl text-[#E2E8F0] font-bold"
+        <span class="text-xs lg:text-sm">Allocated</span>
+        <span class="text-base lg:text-2xl text-[#E2E8F0] font-bold"
           >{allocated ? allocated_participants : "-"}</span
         >
         <span class="text-xs">Successfully Alloted</span>
@@ -516,13 +522,13 @@
     <div class="grid-card">
       <div class="card-logo">
         <BedDouble
-          class="w-16 h-16 rounded-full bg-[#92400E33]/80 p-4 text-[#F59E0B] border border-[#92400E33]"
+          class="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[#92400E33]/80 p-2 lg:p-4 text-[#F59E0B] border border-[#92400E33]"
         />
       </div>
 
       <div class="card-info">
-        <span class="text-sm">Remaining Beds</span>
-        <span class="text-2xl text-[#E2E8F0] font-bold"
+        <span class="text-xs lg:text-sm">Remaining Beds</span>
+        <span class="text-base lg:text-2xl text-[#E2E8F0] font-bold"
           >{rooms.length ? remaining_capacity : "-"}</span
         >
         <span class="text-xs">Vacant Beds</span>
@@ -530,16 +536,16 @@
     </div>
   </div>
 
-  <div class="upload-section mt-3 grid grid-cols-3 gap-3">
+  <div class="upload-section mt-5 lg:mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="upload-grid-card">
       <div class="flex items-center gap-2">
         <FileSpreadsheet
-          class="w-10 h-10 rounded-xl p-1 bg-[#3B82F626]/80 border border-[#3B82F626] text-[#3B82F6]"
+          class="w-8 h-8 lg:w-10 lg:h-10 rounded lg:rounded-xl lg:p-1 bg-[#3B82F626]/80 border border-[#3B82F626] text-[#3B82F6]"
         />
         <div class="text-[#E2E8F0] flex flex-col align-baseline">
-          <span class="text-base font-semibold">Hostel Excel File</span>
+          <span class="text-sm lg:text-base font-semibold">Hostel Excel File</span>
           <span class="text-xs"
-            >Upload file containing hostel and room details</span
+            >Upload file containing room details</span
           >
         </div>
       </div>
@@ -553,33 +559,33 @@
         ondrop={handleHostelDrop}
       >
         {#if hostelFileInfo}
-          <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
+          <Cloudupload class="w-9 h-9 lg:w-12 lg:h-12 text-[#38BDF8]" />
           <span
-            class="text-[#F8FAFC] text-sm text-center break-all px-2"
+            class="text-[#F8FAFC] text-xs lg:text-sm text-center break-all px-2"
             title={hostelFileInfo.name}>{hostelFileInfo.name}</span
           >
-          <span class="text-[#64748B] align-bottom text-sm"
+          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
             >{formatFileSize(hostelFileInfo.size)}</span
           >
           <button
             type="button"
             onclick={() => openFilePicker(hostelFileInput)}
-            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Change File</button
           >
         {:else}
-          <Cloudupload class="w-12 h-12 text-[#38BDF8]" />
-          <span class="text-[#F8FAFC] text-sm"
+          <Cloudupload class="w-9 h-9 lg:w-12 lg:h-12 text-[#38BDF8]" />
+          <span class="text-[#F8FAFC] text-xs lg:text-sm"
             >Drag & Drop your Excel file here</span
           >
-          <span class="text-[#F8FAFC] text-sm">or</span>
+          <span class="text-[#F8FAFC] text-xs lg:text-sm">or</span>
           <button
             type="button"
             onclick={() => openFilePicker(hostelFileInput)}
-            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Browse Files</button
           >
-          <span class="text-[#64748B] align-bottom text-sm"
+          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
             >Supports .xlsx files</span
           >
         {/if}
@@ -598,10 +604,10 @@
     <div class="upload-grid-card">
       <div class="flex items-center gap-2">
         <FileUser
-          class="w-10 h-10 rounded-xl p-1 bg-[#5B21B633]/80 border border-[#5B21B633] text-[#8B5CF6]"
+          class="w-8 h-8 lg:w-10 lg:h-10 rounded lg:rounded-xl lg:p-1 bg-[#5B21B633]/80 border border-[#5B21B633] text-[#8B5CF6]"
         />
         <div class="text-[#E2E8F0] flex flex-col align-baseline">
-          <span class="text-base font-semibold">Participant Excel File</span>
+          <span class="text-sm lg:text-base font-semibold">Participant Excel File</span>
           <span class="text-xs">Upload file containing participant details</span
           >
         </div>
@@ -615,33 +621,33 @@
         ondrop={handleParticipantDrop}
       >
         {#if participantFileInfo}
-          <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
+          <Cloudupload class="w-9 h-9 lg:w-12 lg:h-12 text-[#8B5CF6]" />
           <span
-            class="text-[#F8FAFC] text-sm text-center break-all px-2"
+            class="text-[#F8FAFC] text-xs lg:text-sm text-center break-all px-2"
             title={participantFileInfo.name}>{participantFileInfo.name}</span
           >
-          <span class="text-[#64748B] align-bottom text-sm"
+          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
             >{formatFileSize(participantFileInfo.size)}</span
           >
           <button
             type="button"
             onclick={() => openFilePicker(participantFileInput)}
-            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Change File</button
           >
         {:else}
-          <Cloudupload class="w-12 h-12 text-[#8B5CF6]" />
-          <span class="text-[#F8FAFC] text-sm"
+          <Cloudupload class="w-9 h-9 lg:w-12 lg:h-12 text-[#8B5CF6]" />
+          <span class="text-[#F8FAFC] text-xs lg:text-sm"
             >Drag & Drop your Excel file here</span
           >
-          <span class="text-[#F8FAFC] text-sm">or</span>
+          <span class="text-[#F8FAFC] text-xs lg:text-sm">or</span>
           <button
             type="button"
             onclick={() => openFilePicker(participantFileInput)}
-            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-sm cursor-pointer"
+            class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Browse Files</button
           >
-          <span class="text-[#64748B] align-bottom text-sm"
+          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
             >Supports .xlsx files</span
           >
         {/if}
@@ -657,30 +663,30 @@
     </div>
 
     <div
-      class="allocation-card flex flex-col gap-10 text-center justify-center items-center rounded-lg bg-[#112240] border border-[#233554] transform duration-300 hover:scale-102 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+      class="py-5 px-4 lg:px-2 lg:py-0 allocation-card flex flex-col gap-10 text-center justify-center items-center rounded-lg bg-[#112240] border border-[#233554] transform duration-300 hover:scale-102 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
     >
-      <div>
-        <p class="text-[#F8FAFC] text-base font-semibold">Ready to Allocate?</p>
-        <p class="text-[#bfc2c6] text-sm">
+      <div class="flex flex-col gap-1">
+        <p class="text-[#F8FAFC] text-sm lg:text-base font-semibold">Ready to Allocate?</p>
+        <p class="text-[#bfc2c6] text-xs lg:text-sm">
           Upload both Excel files to enable room allocation
         </p>
       </div>
       <div class="flex flex-col gap-2">
         <button
-          class="grow py-2 flex gap-3 justify-center items-center border font-semibold cursor-pointer text-white border-blue-600 bg-blue-500 hover:bg-blue-600 rounded disabled:bg-gray-400/70 disabled:text-gray-800 disabled:border disabled:border-gray-500 disabled:cursor-not-allowed"
+          class="lg:grow text-sm lg:text-base py-2 flex gap-3 justify-center items-center border font-semibold cursor-pointer text-white border-blue-600 bg-blue-500 hover:bg-blue-600 rounded disabled:bg-gray-400/70 disabled:text-gray-800 disabled:border disabled:border-gray-500 disabled:cursor-not-allowed"
           onclick={handleAllocateRooms}
           disabled={allocationDisabled}
         >
           <Users class="w-5 h-5" />
           Allocate Rooms
         </button>
-        <p class="text-sm text-[#64748B]">
+        <p class="text-xs lg:text-sm text-[#64748B]">
           {#if allocated}
             Allocation completed successfully
           {:else if hasBothFiles}
             Click the button to allocate rooms
           {:else}
-            Please upload both hostel and participant files first
+            Please upload both hostel and participant files
           {/if}
         </p>
       </div>
@@ -720,7 +726,7 @@
   </div>
 
   <div
-    class="data-preview flex gap-4 bg-[#112240] py-3 px-5 mt-3 rounded-lg border border-[#233554]"
+    class="data-preview flex flex-col lg:flex-row gap-4 bg-[#112240] py-3 px-5 mt-3 rounded-lg border border-[#233554]"
   >
     <div class="flex flex-col flex-1">
       <div class="flex gap-2 items-center">
@@ -898,7 +904,8 @@
 
     {#if hasUploadedFiles}
       <div
-        class="quick-info flex flex-col gap-3 px-4 py-2 align-baseline border border-[#233554] rounded w-1/4"
+      bind:this={quick_info_div}
+        class="quick-info lg:self-start flex flex-col gap-3 px-4 py-2 align-baseline border border-[#233554] rounded self-stretch lg:w-fit h-fit"
       >
         <span class="text-base text-[#E2E8F0] font-semibold">Quick Info</span>
 
@@ -965,7 +972,7 @@
           </div>
         </div>
 
-        <div class="download-section flex flex-col items-center gap-2 my-4">
+        <div class="download-section flex flex-col items-center text-sm lg:text-base gap-2 my-4">
           <button
             type="button"
             class="download-btn"
@@ -987,11 +994,11 @@
 </div>
 
 <div
-  class="footer bg-[#0B1220]/80 w-full py-3 flex text-[#F8FAFC] flex-col justify-center items-center text-sm"
+  class="footer bg-[#0B1220]/80 w-full px-3 lg:px-0 py-2 pb-5 lg:py-3 flex text-[#F8FAFC] flex-col justify-center items-center text-xs gap-2 lg:gap-0 lg:text-sm"
 >
   <span>Built by Divyansh Pandey</span>
   <span class="text-xs">Made with Svelte • Tailwind CSS • SheetJS • TypeScript</span>
-  <span class="text-xs">Special thanks to ChatGPT, Codex and Gemini for being my debugging partner throughout this project.</span>
+  <span class="text-xs text-center">Special thanks to ChatGPT, Codex and Gemini for being my debugging partner throughout this project.</span>
   
   <span class="mt-1"
     ><a href="https://github.com/divyansh-coder-git" target="_blank">GitHub</a>
@@ -1199,6 +1206,12 @@
     gap: 0.75rem;
   }
 
+  @media (max-width: 1024px){
+    .step-tracker{
+      display: none;
+    }
+  }
+
   .step-connector {
     position: relative;
     height: 2px;
@@ -1269,12 +1282,8 @@
     transition: transform 0.28s ease;
   }
 
-  .preview-table-shell {
-    overflow: hidden;
-  }
-
   .preview-panel {
-    animation: tab-panel-in 0.24s ease;
+    animation: tab-panel-in 0.30s ease;
   }
 
   @keyframes tab-panel-in {
