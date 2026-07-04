@@ -3,8 +3,8 @@
   import { allocateRooms as buildAllocations } from "$lib/allocation";
   import type { Allocation, Participant, Room } from "$lib/types";
   import Building2 from "@lucide/svelte/icons/building-2";
-  import Moon from "@lucide/svelte/icons/moon";
-  import Sun from "@lucide/svelte/icons/sun";
+  // import Moon from "@lucide/svelte/icons/moon";
+  // import Sun from "@lucide/svelte/icons/sun";
   import Bed from "@lucide/svelte/icons/bed";
   import Users from "@lucide/svelte/icons/users-round";
   import Checkcircle from "@lucide/svelte/icons/circle-check-big";
