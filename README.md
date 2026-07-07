@@ -1,4 +1,4 @@
-# Hostel Allotment System
+We# Hostel Allotment System
 🌐 **Live Demo:** https://hostel-allotment.netlify.app
 
 A web application that automates hostel room allocation by processing hostel and participant data from Excel files. Built with SvelteKit and TypeScript, it provides an intuitive dashboard for uploading data, allocating rooms, and downloading the final allocation report.
@@ -94,14 +94,15 @@ Entry Point: src/routes/+page.svelte contains the main application UI and coordi
 
 ### Hostel File
 
-| Hostel | Room | Gender |
+| Hostel | Room | Capacity | Gender |
 |---------|------|--------|
-| Name 1 | 101 | Boys |
-| Name 2 | 102 | Girls |
+| Name 1 | 101 | 2 | Boys |
+| Name 2 | 102 | 3 | Girls |
+| Name 3 | 107 | 1 | Boys |
 
 ### Participant File
 
-| Name | Gender |
+| Participant Name | Gender |
 |------|--------|
 | Rahul | Male |
 | Priya | Female |
