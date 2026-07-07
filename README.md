@@ -95,7 +95,7 @@ Entry Point: src/routes/+page.svelte contains the main application UI and coordi
 ### Hostel File
 
 | Hostel | Room | Capacity | Gender |
-|---------|------|--------|
+|--------|------|----------|--------|
 | Name 1 | 101 | 2 | Boys |
 | Name 2 | 102 | 3 | Girls |
 | Name 3 | 107 | 1 | Boys |
