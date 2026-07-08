@@ -235,7 +235,7 @@
       ];
 
       if (!hasExactHeaders(getHeaders(sheet), requiredHeaders)) {
-        alert("Invalid Hostel Excel format");
+        alert("Invalid Headers in excel file, the headers should be ['Hostel Name', 'Room Number', 'Capacity', 'Hostel Type'] specifically");
         return;
       }
 
@@ -297,7 +297,7 @@
       const requiredHeaders = ["Participant Name", "Gender"];
 
       if (!hasExactHeaders(getHeaders(sheet), requiredHeaders)) {
-        alert("Invalid Participant Excel format");
+        alert("Invalid headers in Participants file, the headers should be ['Participant Name', 'Gender'] specifically.");
         return;
       }
 
@@ -585,8 +585,11 @@
             class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Browse Files</button
           >
-          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
+          <span class="text-[#64748B] text-xs"
             >Supports .xlsx files</span
+          >
+          <span class="text-[#38BDF8] align-bottom text-xs"
+            ><a class="flex gap-1 items-center cursor-pointer" href="/sample_hostel.xlsx" target="_blank" aria-label="Download hostel file sample" download><Download class="w-3 h-3"/>Download Sample(.xlsx)</a></span
           >
         {/if}
         <input
@@ -647,8 +650,11 @@
             class="rounded my-1 px-2 py-1 text-[#38BDF8] border border-[#38BDF8] text-xs lg:text-sm cursor-pointer"
             >Browse Files</button
           >
-          <span class="text-[#64748B] align-bottom text-xs lg:text-sm"
+          <span class="text-[#64748B] text-xs"
             >Supports .xlsx files</span
+          >
+          <span class="text-[#38BDF8] align-bottom text-xs"
+            ><a class="flex gap-1 items-center cursor-pointer" href="/sample_participant.xlsx" aria-label="Download participant file sample" download><Download class="w-3 h-3"/>Download Sample(.xlsx)</a></span
           >
         {/if}
         <input
