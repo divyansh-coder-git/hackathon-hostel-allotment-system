@@ -23,6 +23,7 @@ You can try the application online. It is currently hosted on Netlify.
 - Gender-based allocation
 - Input validation
 - Download allocation results
+- Download Sample xlsx file for format information and testing
 
 ## Tech Stack
 - Svelte
@@ -63,6 +64,13 @@ npm run dev
 ## Project Structure
 
 ```tree
+assets
+├── demo.gif
+├── s1.png
+├── s2.png
+├── s3.png
+└── s4.png
+
 src
 ├── app.d.ts
 ├── app.html
@@ -77,6 +85,11 @@ src
     ├── +page.server.ts
     ├── +page.svelte
     └── layout.css
+
+static
+├── robots.txt
+├── sample_hostel.xlsx
+└── sample_participant.xlsx
 ```
 Entry Point: src/routes/+page.svelte contains the main application UI and coordinates file uploads, room allocation, and result generation.
 
