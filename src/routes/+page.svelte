@@ -1013,7 +1013,7 @@
       >LinkedIn</a
     >
     •
-    <a href="https://instagram.com/divyansh_coder" target="_blank">Instagram</a
+    <a href="https://instagram.com/divyansh._.pandey__/" target="_blank">Instagram</a
     ></span
   >
 </div>
